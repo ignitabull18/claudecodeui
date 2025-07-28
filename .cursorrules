@@ -1,0 +1,144 @@
+# Claude Code UI - Cursor Development Rules
+
+## 🚨 CRITICAL: This is Claude Code UI
+This project is a **web-based frontend interface for Claude Code CLI**. It is NOT a standalone implementation.
+
+## ⚡ ABSOLUTE REQUIREMENTS
+
+### 1. **ALWAYS Use Claude Code CLI**
+- **MCP Servers**: Use `claude mcp add`, `claude mcp list`, `claude mcp remove`
+- **Sessions**: Use `claude` command with appropriate flags
+- **Configuration**: Use Claude's native configuration system
+- **Authentication**: Use Claude's built-in auth mechanisms
+
+### 2. **NO WORKAROUNDS OR ALTERNATIVE IMPLEMENTATIONS**
+❌ **NEVER**:
+- Create database-backed alternatives to Claude CLI features
+- Implement custom MCP server management systems
+- Build parallel configuration storage
+- Develop independent session management
+- Write custom parsers for Claude's functionality
+
+✅ **ALWAYS**:
+- Execute Claude CLI commands via Node.js `spawn` or `exec`
+- Parse Claude CLI output directly
+- Use Claude's configuration files (`.claude.json`, etc.)
+- Respect Claude's project structure and conventions
+- Trust Claude CLI as the source of truth
+
+### 3. **Backend Philosophy**
+The backend (`server/`) exists ONLY to:
+1. Execute Claude CLI commands
+2. Parse and return CLI output
+3. Manage WebSocket connections for real-time updates
+4. Serve the frontend application
+5. Handle file operations Claude requests
+
+**Example - Correct Approach**:
+```javascript
+// ✅ CORRECT - Using Claude CLI
+router.post('/api/mcp/add', async (req, res) => {
+  const { name, command } = req.body;
+  const { stdout, stderr } = await execAsync(`claude mcp add "${name}" ${command}`);
+  res.json({ success: true, output: stdout });
+});
+```
+
+**Example - Wrong Approach**:
+```javascript
+// ❌ WRONG - Creating workaround
+router.post('/api/mcp-manager/servers', async (req, res) => {
+  // Don't create custom database storage
+  // Don't implement alternative MCP management
+  db.insert('mcp_servers', ...); // NO!
+});
+```
+
+## 🏗️ Architecture Principles
+
+### Frontend (React)
+- Beautiful, modern UI using Tailwind CSS
+- Real-time updates via WebSocket
+- Responsive design for all screen sizes
+- Clear visual feedback for all operations
+- Accessibility-first approach
+
+### Backend (Node.js/Bun)
+- Thin wrapper around Claude CLI
+- RESTful API endpoints that map to CLI commands
+- WebSocket for streaming Claude responses
+- No business logic - Claude CLI handles everything
+
+## 📁 Project Structure
+```
+claudecodeui/
+├── src/                    # React frontend
+│   ├── components/         # UI components
+│   ├── contexts/          # React contexts
+│   └── utils/             # Frontend utilities
+├── server/                # Backend API
+│   ├── index.js          # Express server
+│   ├── claude-cli.js     # Claude CLI wrapper
+│   └── routes/           # API endpoints
+└── public/               # Static assets
+```
+
+## 🔧 Development Guidelines
+
+### When Adding Features:
+1. **First** check if Claude CLI supports it
+2. **Then** create UI to interact with that CLI feature
+3. **Never** implement the feature independently
+
+### API Endpoint Pattern:
+```javascript
+// 1. Receive request from frontend
+// 2. Validate input
+// 3. Execute Claude CLI command
+// 4. Parse output
+// 5. Return to frontend
+```
+
+### Error Handling:
+- Surface Claude CLI errors clearly
+- Don't hide or transform Claude's error messages
+- Provide helpful UI context for errors
+
+## 🎯 Project Goals
+1. Make Claude Code accessible via web browser
+2. Provide beautiful visualizations of Claude's capabilities
+3. Enhance Claude's UX without changing its behavior
+4. Enable team collaboration through web interface
+5. Maintain 100% compatibility with Claude CLI
+
+## ⚠️ Common Pitfalls to Avoid
+1. **Reimplementing Claude features**: If Claude can do it, use Claude
+2. **Caching Claude state**: Always query Claude for current state
+3. **Modifying Claude's data**: We visualize, we don't transform
+4. **Creating "smart" wrappers**: Claude is already smart
+5. **Database-backed features**: Claude's config files are the database
+
+## 🚀 Quick Reference
+
+### MCP Servers
+- Add: `claude mcp add <name> <command>`
+- List: `claude mcp list`
+- Remove: `claude mcp remove <name>`
+
+### Sessions
+- New: `claude --print "prompt"`
+- Resume: `claude --resume <session-id>`
+- With MCP: `claude --mcp-config ~/.claude.json`
+
+### Configuration
+- Global: `~/.claude.json`
+- Project: `.claude/` directory
+
+## 💡 Remember
+**Claude Code UI is a window into Claude Code, not a replacement for it.**
+
+Every line of code should respect this principle. When in doubt, check how Claude CLI does it and mirror that approach in the UI.
+
+---
+
+*"We stand on the shoulders of Claude Code - we don't rebuild its legs."* 

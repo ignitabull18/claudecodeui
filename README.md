@@ -4,7 +4,9 @@
 </div>
 
 
-A desktop and mobile UI for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Anthropic's official CLI for AI-assisted coding. You can use it locally or remotely to view your active projects and sessions in claude code and make changes to them the same way you would do it in claude code CLI. This gives you a proper interface that works everywhere. 
+A desktop and mobile UI for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), Anthropic's official CLI for AI-assisted coding. You can use it locally or remotely to view your active projects and sessions in claude code and make changes to them the same way you would do it in claude code CLI. This gives you a proper interface that works everywhere.
+
+> **⚡ IMPORTANT: This is a UI wrapper for Claude Code CLI. We do NOT reimplement Claude's functionality. All operations MUST use Claude CLI commands directly. No workarounds, no alternative implementations.** 
 
 ## Screenshots
 
@@ -58,7 +60,7 @@ cd claudecodeui
 
 2. **Install dependencies:**
 ```bash
-npm install
+bun install
 ```
 
 3. **Configure environment:**
@@ -70,7 +72,7 @@ cp .env.example .env
 4. **Start the application:**
 ```bash
 # Development mode (with hot reload)
-npm run dev
+bun run dev
 
 ```
 The application will start at the port you specified in your .env
@@ -171,13 +173,13 @@ We welcome contributions! Please follow these guidelines:
 #### Getting Started
 1. **Fork** the repository
 2. **Clone** your fork: `git clone <your-fork-url>`
-3. **Install** dependencies: `npm install`
+3. **Install** dependencies: `bun install`
 4. **Create** a feature branch: `git checkout -b feature/amazing-feature`
 
 #### Development Process
 1. **Make your changes** following the existing code style
 2. **Test thoroughly** - ensure all features work correctly
-3. **Run quality checks**: `npm run lint && npm run format`
+3. **Run quality checks**: `bun test` (if tests are added)
 4. **Commit** with descriptive messages following [Conventional Commits](https://conventionalcommits.org/)
 5. **Push** to your branch: `git push origin feature/amazing-feature`
 6. **Submit** a Pull Request with:

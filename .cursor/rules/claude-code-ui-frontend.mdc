@@ -1,0 +1,89 @@
+# Claude Code UI Frontend Architecture
+
+## 🚨 CRITICAL REMINDER: NO WORKAROUNDS
+This is a **UI wrapper for Claude Code CLI** - we build frontend interfaces that visualize and interact with Claude Code's capabilities. We do NOT reimplement Claude Code's backend functionality.
+
+### ⚡ IMPERATIVE RULES:
+1. **ALWAYS use Claude CLI commands** - no exceptions
+2. **NEVER create alternative implementations** - no database-backed workarounds
+3. **TRUST Claude as the source of truth** - we visualize, not recreate
+
+## 📁 Key Frontend Components Structure
+
+### Main Intelligence Panel
+- [src/components/CodeAnalysisPanel.jsx](mdc:src/components/CodeAnalysisPanel.jsx) - Central hub for all code intelligence features
+- Uses tab-based navigation for different intelligence features
+- Integrates specialized panels as sub-components
+
+### Specialized Intelligence Panels
+- [src/components/CrossFileRefactoringPanel.jsx](mdc:src/components/CrossFileRefactoringPanel.jsx) - Cross-file refactoring operations UI
+- [src/components/IntelligentFileSelector.jsx](mdc:src/components/IntelligentFileSelector.jsx) - Smart file selection interface
+- [src/components/ContextAwareCodeGenerator.jsx](mdc:src/components/ContextAwareCodeGenerator.jsx) - Code generation interface
+
+## ⚛️ React Patterns
+
+### State Management
+```javascript
+// Use specific state for each intelligence feature
+const [analysisData, setAnalysisData] = useState(null);
+const [dependencyMap, setDependencyMap] = useState(null);
+const [crossReferences, setCrossReferences] = useState(null);
+const [projectSummary, setProjectSummary] = useState(null);
+const [loadingState, setLoadingState] = useState(false);
+```
+
+### API Integration (Frontend Only)
+```javascript
+// Call backend endpoints that interface with Claude Code CLI
+const loadAnalysisData = async () => {
+  const response = await fetch(`/api/code-analysis/${projectName}/analyze`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ projectRoot: selectedProject.path })
+  });
+};
+```
+
+## 🎨 UI/UX Patterns
+
+### Tab Navigation
+```javascript
+const tabs = [
+  { id: 'overview', label: 'Overview', icon: BarChart3 },
+  { id: 'refactoring', label: 'Smart Refactoring', icon: Brain },
+  { id: 'architecture', label: 'Architecture', icon: TreePine }
+];
+```
+
+### Loading States
+```javascript
+{loadingState && (
+  <div className="text-center py-12">
+    <RefreshCw className="w-16 h-16 text-gray-400 mx-auto mb-4 animate-spin" />
+    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+      Analyzing...
+    </h3>
+  </div>
+)}
+```
+
+### Data Visualization
+- Use cards and grids for metrics display
+- Color-coded indicators for status/confidence levels
+- Interactive controls for user input
+- Copy-to-clipboard functionality for generated content
+
+## 🚫 What NOT to Build
+- Custom AST parsing logic
+- Dependency analysis engines  
+- Refactoring transformation code
+- Code generation algorithms
+- File system analysis tools
+
+## ✅ What TO Build
+- React components that send requests to Claude Code
+- UI for visualizing Claude Code's analysis results
+- Interactive controls for Claude Code features
+- Forms and inputs for user requests to Claude Code
+- Display panels for subagents and suggestions
+- Settings and configuration interfaces
