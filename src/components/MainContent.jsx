@@ -12,12 +12,24 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Settings } from 'lucide-react';
 import ChatInterface from './ChatInterface';
 import FileTree from './FileTree';
 import CodeEditor from './CodeEditor';
 import Shell from './Shell';
 import GitPanel from './GitPanel';
+import CodeAnalysisPanel from './CodeAnalysisPanel';
+import TestingDebugPanel from './TestingDebugPanel';
+import AnalyticsDashboard from './AnalyticsDashboard';
+import CollaborationHub from './CollaborationHub';
+import MCPManager from './MCPManager';
+import SlashCommandsManager from './SlashCommandsManager';
+import SubagentOrchestrator from './SubagentOrchestrator';
+import HooksManager from './HooksManager';
+import ThinkingFramework from './ThinkingFramework';
 import ErrorBoundary from './ErrorBoundary';
+import WebSearchBrowser from './WebSearchBrowser';
 
 function MainContent({ 
   selectedProject, 
@@ -37,13 +49,23 @@ function MainContent({
   onSessionInactive,      // Mark session as inactive when conversation completes/aborts  
   onReplaceTemporarySession, // Replace temporary session ID with real session ID from WebSocket
   onNavigateToSession,    // Navigate to a specific session (for Claude CLI session duplication workaround)
-  onShowSettings,         // Show tools settings panel
   autoExpandTools,        // Auto-expand tool accordions
   showRawParameters,      // Show raw parameters in tool accordions
   autoScrollToBottom,     // Auto-scroll to bottom when new messages arrive
   sendByCtrlEnter         // Send by Ctrl+Enter mode for East Asian language input
 }) {
+  const navigate = useNavigate();
   const [editingFile, setEditingFile] = useState(null);
+  const [showCodeAnalysis, setShowCodeAnalysis] = useState(false);
+  const [showTestingDebug, setShowTestingDebug] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showWebSearch, setShowWebSearch] = useState(false);
+  const [showCollaboration, setShowCollaboration] = useState(false);
+  const [showMCPManager, setShowMCPManager] = useState(false);
+  const [showSlashCommands, setShowSlashCommands] = useState(false);
+  const [showSubagentOrchestrator, setShowSubagentOrchestrator] = useState(false);
+  const [showHooksManager, setShowHooksManager] = useState(false);
+  const [showThinkingFramework, setShowThinkingFramework] = useState(false);
 
   const handleFileOpen = (filePath, diffInfo = null) => {
     // Create a file object that CodeEditor expects
@@ -185,6 +207,17 @@ function MainContent({
             </div>
           </div>
           
+          {/* Settings Button */}
+          <div className="flex-shrink-0 flex items-center gap-2">
+            <button
+              onClick={() => navigate('/settings')}
+              className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200 border border-transparent hover:border-blue-200 dark:hover:border-blue-700 touch-manipulation active:scale-95"
+              title="Settings"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+          </div>
+
           {/* Modern Tab Navigation - Right Side */}
           <div className="flex-shrink-0 hidden sm:block">
             <div className="relative flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
@@ -248,6 +281,136 @@ function MainContent({
                   <span className="hidden sm:inline">Source Control</span>
                 </span>
               </button>
+                      <button
+          onClick={() => setActiveTab('analysis')}
+          className={`relative px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
+            activeTab === 'analysis'
+              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700'
+          }`}
+        >
+          <span className="flex items-center gap-1 sm:gap-1.5">
+            <svg className="w-3 sm:w-3.5 h-3 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3v5h4l-2-2 5 5 7-7-1.5-1.5L11 7l-3-3-1 1V3H3zm9 11h5v-2h-5v2zm0 2h5v-2h-5v2z" />
+            </svg>
+            <span className="hidden sm:inline">Analysis</span>
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab('testing')}
+          className={`relative px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
+            activeTab === 'testing'
+              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700'
+          }`}
+        >
+          <span className="flex items-center gap-1 sm:gap-1.5">
+            <svg className="w-3 sm:w-3.5 h-3 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="hidden sm:inline">Testing</span>
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab('analytics')}
+          className={`relative px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
+            activeTab === 'analytics'
+              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700'
+          }`}
+        >
+          <span className="flex items-center gap-1 sm:gap-1.5">
+            <svg className="w-3 sm:w-3.5 h-3 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17h6l-3-9-3 9zm1-4h2" />
+            </svg>
+            <span className="hidden sm:inline">Analytics</span>
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab('collaboration')}
+          className={`relative px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
+            activeTab === 'collaboration'
+              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700'
+          }`}
+        >
+          <span className="flex items-center gap-1 sm:gap-1.5">
+            <svg className="w-3 sm:w-3.5 h-3 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span className="hidden sm:inline">Share</span>
+          </span>
+        </button>
+        <button
+          onClick={() => setShowWebSearch(true)}
+          className="relative px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
+        >
+          <span className="flex items-center gap-1 sm:gap-1.5">
+            <svg className="w-3 sm:w-3.5 h-3 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.6 9h16.8M3.6 15h16.8M12 3.6c1.8 0 3.3 2.5 4 5.4M12 3.6c-1.8 0-3.3 2.5-4 5.4M12 20.4c1.8 0 3.3-2.5 4-5.4M12 20.4c-1.8 0-3.3 2.5-4 5.4" />
+            </svg>
+            <span className="hidden sm:inline">Search</span>
+          </span>
+        </button>
+        <button
+          onClick={() => setShowMCPManager(true)}
+          className="relative px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
+        >
+          <span className="flex items-center gap-1 sm:gap-1.5">
+            <svg className="w-3 sm:w-3.5 h-3 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12l-2 0m6-7l-2 0m6 0l-2 0m6 7l-2 0m-9 7h2m0-14h2" />
+              <circle cx="12" cy="12" r="3" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 1v6m0 6v6m-3-9l3 3l3-3" />
+            </svg>
+            <span className="hidden sm:inline">MCP</span>
+          </span>
+        </button>
+        <button
+          onClick={() => setShowSlashCommands(true)}
+          className="relative px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
+        >
+          <span className="flex items-center gap-1 sm:gap-1.5">
+            <svg className="w-3 sm:w-3.5 h-3 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="hidden sm:inline">Commands</span>
+          </span>
+        </button>
+        <button
+          onClick={() => setShowSubagentOrchestrator(true)}
+          className="relative px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
+        >
+          <span className="flex items-center gap-1 sm:gap-1.5">
+            <svg className="w-3 sm:w-3.5 h-3 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span className="hidden sm:inline">Agents</span>
+          </span>
+        </button>
+        <button
+          onClick={() => setShowHooksManager(true)}
+          className="relative px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
+        >
+          <span className="flex items-center gap-1 sm:gap-1.5">
+            <svg className="w-3 sm:w-3.5 h-3 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span className="hidden sm:inline">Hooks</span>
+          </span>
+        </button>
+        <button
+          onClick={() => setShowThinkingFramework(true)}
+          className="relative px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
+        >
+          <span className="flex items-center gap-1 sm:gap-1.5">
+            <svg className="w-3 sm:w-3.5 h-3 sm:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              <circle cx="12" cy="8" r="3" />
+            </svg>
+            <span className="hidden sm:inline">Thinking</span>
+          </span>
+        </button>
                {/* <button
                 onClick={() => setActiveTab('preview')}
                 className={`relative px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
@@ -284,7 +447,7 @@ function MainContent({
               onSessionInactive={onSessionInactive}
               onReplaceTemporarySession={onReplaceTemporarySession}
               onNavigateToSession={onNavigateToSession}
-              onShowSettings={onShowSettings}
+              onShowSettings={() => navigate('/settings')}
               autoExpandTools={autoExpandTools}
               showRawParameters={showRawParameters}
               autoScrollToBottom={autoScrollToBottom}
@@ -305,7 +468,119 @@ function MainContent({
         <div className={`h-full overflow-hidden ${activeTab === 'git' ? 'block' : 'hidden'}`}>
           <GitPanel selectedProject={selectedProject} isMobile={isMobile} />
         </div>
-        <div className={`h-full overflow-hidden ${activeTab === 'preview' ? 'block' : 'hidden'}`}>
+        <div className={`h-full overflow-hidden ${activeTab === 'analysis' ? 'block' : 'hidden'}`}>
+          <div className="h-full flex flex-col">
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3v5h4l-2-2 5 5 7-7-1.5-1.5L11 7l-3-3-1 1V3H3zm9 11h5v-2h-5v2zm0 2h5v-2h-5v2z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  Code Analysis & Refactoring
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-md">
+                  Analyze your code quality, get refactoring suggestions, and track complexity metrics for better maintainability.
+                </p>
+                <button
+                  onClick={() => setShowCodeAnalysis(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  Start Analysis
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className={`h-full overflow-hidden ${activeTab === 'testing' ? 'block' : 'hidden'}`}>
+          <div className="h-full flex flex-col">
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  Testing & Debugging
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-md">
+                  Run tests, manage debug sessions, view coverage reports, and set up automated testing workflows.
+                </p>
+                <button
+                  onClick={() => setShowTestingDebug(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                                    Start Testing
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className={`h-full overflow-hidden ${activeTab === 'analytics' ? 'block' : 'hidden'}`}>
+          <div className="h-full flex flex-col">
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17h6l-3-9-3 9zm1-4h2" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  Analytics & Usage Insights
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-md">
+                  Track token usage, analyze productivity metrics, monitor costs, and optimize your Claude usage patterns.
+                </p>
+                <button
+                  onClick={() => setShowAnalytics(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17h6l-3-9-3 9zm1-4h2" />
+                  </svg>
+                  View Analytics
+                                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
+         <div className={`h-full overflow-hidden ${activeTab === 'collaboration' ? 'block' : 'hidden'}`}>
+           <div className="h-full flex flex-col">
+             <div className="flex-1 flex items-center justify-center p-8">
+               <div className="text-center">
+                 <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mx-auto mb-4">
+                   <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                   </svg>
+                 </div>
+                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                   Collaboration & Sharing
+                 </h3>
+                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-md">
+                   Share sessions with your team, manage collaborative workspaces, and work together in real-time.
+                 </p>
+                 <button
+                   onClick={() => setShowCollaboration(true)}
+                   className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+                 >
+                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                   </svg>
+                   Share & Collaborate
+                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
+          <div className={`h-full overflow-hidden ${activeTab === 'preview' ? 'block' : 'hidden'}`}>
           {/* <LivePreviewPanel
             selectedProject={selectedProject}
             serverStatus={serverStatus}
@@ -341,7 +616,103 @@ function MainContent({
           projectPath={selectedProject?.path}
         />
       )}
-    </div>
+
+          {/* Code Analysis Panel Modal */}
+    {showCodeAnalysis && (
+      <CodeAnalysisPanel
+        isOpen={showCodeAnalysis}
+        onClose={() => setShowCodeAnalysis(false)}
+        selectedProject={selectedProject}
+      />
+    )}
+
+    {/* Testing & Debug Panel Modal */}
+    {showTestingDebug && (
+      <TestingDebugPanel
+        isOpen={showTestingDebug}
+        onClose={() => setShowTestingDebug(false)}
+        selectedProject={selectedProject}
+      />
+    )}
+
+    {/* Analytics Dashboard Modal */}
+    {showAnalytics && (
+      <AnalyticsDashboard
+        isOpen={showAnalytics}
+        onClose={() => setShowAnalytics(false)}
+        selectedProject={selectedProject}
+      />
+    )}
+
+    {/* Collaboration Hub Modal */}
+    {showCollaboration && (
+      <CollaborationHub
+        isOpen={showCollaboration}
+        onClose={() => setShowCollaboration(false)}
+        selectedProject={selectedProject}
+        currentSession={null} // TODO: Pass current session if available
+      />
+    )}
+
+    {/* MCP Manager Modal */}
+    {showMCPManager && (
+      <MCPManager
+        isOpen={showMCPManager}
+        onClose={() => setShowMCPManager(false)}
+        selectedProject={selectedProject}
+        currentSession={null} // TODO: Pass current session if available
+      />
+    )}
+
+    {/* Slash Commands Manager Modal */}
+    {showSlashCommands && (
+      <SlashCommandsManager
+        isOpen={showSlashCommands}
+        onClose={() => setShowSlashCommands(false)}
+        selectedProject={selectedProject}
+        currentSession={null} // TODO: Pass current session if available
+      />
+    )}
+
+    {/* Subagent Orchestrator Modal */}
+    {showSubagentOrchestrator && (
+      <SubagentOrchestrator
+        isOpen={showSubagentOrchestrator}
+        onClose={() => setShowSubagentOrchestrator(false)}
+        selectedProject={selectedProject}
+        currentSession={null} // TODO: Pass current session if available
+      />
+    )}
+
+    {/* Hooks Manager Modal */}
+    {showHooksManager && (
+      <HooksManager
+        isOpen={showHooksManager}
+        onClose={() => setShowHooksManager(false)}
+        selectedProject={selectedProject}
+        currentSession={null} // TODO: Pass current session if available
+      />
+    )}
+
+    {/* Thinking Framework Modal */}
+    {showThinkingFramework && (
+      <ThinkingFramework
+        isOpen={showThinkingFramework}
+        onClose={() => setShowThinkingFramework(false)}
+        selectedProject={selectedProject}
+        currentSession={null} // TODO: Pass current session if available
+      />
+    )}
+
+    {/* Web Search Browser Modal */}
+    {showWebSearch && (
+      <WebSearchBrowser
+        isOpen={showWebSearch}
+        onClose={() => setShowWebSearch(false)}
+        selectedProject={selectedProject}
+      />
+    )}
+  </div>
   );
 }
 

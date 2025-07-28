@@ -41,6 +41,24 @@ import { spawnClaude, abortClaudeSession } from './claude-cli.js';
 import gitRoutes from './routes/git.js';
 import authRoutes from './routes/auth.js';
 import mcpRoutes from './routes/mcp.js';
+import claudeConfigRoutes from './routes/claude-config.js';
+import claudeAuthRoutes from './routes/claude-auth.js';
+import projectContextRoutes from './routes/project-context.js';
+import advancedToolsRoutes from './routes/advanced-tools.js';
+import slashCommandsRoutes from './routes/slash-commands.js';
+import codeAnalysisRoutes from './routes/code-analysis.js';
+import sessionManagementRoutes from './routes/session-management.js';
+import testingDebugRoutes from './routes/testing-debug.js';
+import fileOperationsRoutes from './routes/file-operations.js';
+import analyticsRoutes from './routes/analytics.js';
+import collaborationRoutes from './routes/collaboration.js';
+import userSettingsRoutes from './routes/user-settings.js';
+import memoryRoutes from './routes/memory.js';
+import mcpManagerRoutes from './routes/mcp-manager.js';
+import subagentsRoutes from './routes/subagents.js';
+import thinkingRoutes from './routes/thinking.js';
+import hooksRoutes from './routes/hooks.js';
+import webSearchRoutes from './routes/web-search.js';
 import { initializeDatabase } from './database/db.js';
 import { validateApiKey, authenticateToken, authenticateWebSocket } from './middleware/auth.js';
 
@@ -163,17 +181,74 @@ const wss = new WebSocketServer({
 app.use(cors());
 app.use(express.json());
 
+// MCP API Routes - list endpoint doesn't require auth (before validateApiKey)
+app.use('/api/mcp', mcpRoutes);
+
+// Slash Commands API Routes - public endpoints
+app.use('/api/slash-commands', slashCommandsRoutes);
+
 // Optional API key validation (if configured)
 app.use('/api', validateApiKey);
 
 // Authentication routes (public)
 app.use('/api/auth', authRoutes);
 
+// Claude authentication routes (public)
+app.use('/api/claude/auth', claudeAuthRoutes);
+
 // Git API Routes (protected)
 app.use('/api/git', authenticateToken, gitRoutes);
 
-// MCP API Routes (protected)
-app.use('/api/mcp', authenticateToken, mcpRoutes);
+// Claude Config API Routes (protected)  
+app.use('/api/claude-config', authenticateToken, claudeConfigRoutes);
+
+// Project Context API Routes (protected)
+app.use('/api/projects', authenticateToken, projectContextRoutes);
+app.use('/api/project-templates', authenticateToken, projectContextRoutes);
+
+// Advanced Tools API Routes (protected)
+app.use('/api/tools', authenticateToken, advancedToolsRoutes);
+
+// Code Analysis API Routes (protected)
+app.use('/api/code-analysis', authenticateToken, codeAnalysisRoutes);
+
+// Session Management API Routes (protected)
+app.use('/api/projects', authenticateToken, sessionManagementRoutes);
+app.use('/api/session-templates', authenticateToken, sessionManagementRoutes);
+
+// Testing and Debugging API Routes (protected)
+app.use('/api/testing', authenticateToken, testingDebugRoutes);
+app.use('/api/debugging', authenticateToken, testingDebugRoutes);
+
+// File Operations API Routes (protected)
+app.use('/api/file-operations', authenticateToken, fileOperationsRoutes);
+
+// Analytics API Routes (protected)
+app.use('/api/analytics', authenticateToken, analyticsRoutes);
+
+// Collaboration API Routes (protected)
+app.use('/api/collaboration', authenticateToken, collaborationRoutes);
+
+// User Settings API Routes (protected)
+app.use('/api/user', authenticateToken, userSettingsRoutes);
+
+// Memory management routes
+app.use('/api/memory', authenticateToken, memoryRoutes);
+
+// MCP (Model Context Protocol) routes
+app.use('/api/mcp', authenticateToken, mcpManagerRoutes);
+
+// Subagents routes
+app.use('/api/subagents', authenticateToken, subagentsRoutes);
+
+// Thinking framework routes
+app.use('/api/thinking', authenticateToken, thinkingRoutes);
+
+// Hooks management routes
+app.use('/api/hooks', authenticateToken, hooksRoutes);
+
+// Web search routes
+app.use('/api/web-search', authenticateToken, webSearchRoutes);
 
 // Static files served after API routes
 app.use(express.static(path.join(__dirname, '../dist')));
