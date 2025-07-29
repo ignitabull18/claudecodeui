@@ -88,7 +88,50 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Username and password are required' });
     }
     
-    // Get user from database
+    // Special handling for Claude authentication
+    if (username === 'claude' && password === 'authenticated-via-claude') {
+      // Verify Claude is actually authenticated
+      const fs = await import('fs');
+      const path = await import('path');
+      const os = await import('os');
+      
+      try {
+        const claudeConfigPath = path.join(os.homedir(), '.claude.json');
+        const configContent = await fs.promises.readFile(claudeConfigPath, 'utf8');
+        const config = JSON.parse(configContent);
+        
+        // Check if Claude is authenticated
+        const hasAuth = (config.oauthAccount && (config.oauthAccount.email || config.oauthAccount.emailAddress)) || 
+                       config.apiKey || config['api-key'];
+        
+        if (hasAuth) {
+          // Create or get Claude user
+          let user = userDb.getUserByUsername('claude');
+          if (!user) {
+            // Create Claude user if it doesn't exist
+            const hashedPassword = await bcrypt.hash(password, 12);
+            const userId = userDb.createUser('claude', hashedPassword);
+            user = userDb.getUserById(userId);
+          }
+          
+          // Generate token
+          const token = generateToken(user);
+          userDb.updateLastLogin(user.id);
+          
+          return res.json({
+            success: true,
+            user: { id: user.id, username: user.username },
+            token
+          });
+        }
+      } catch (error) {
+        console.error('Error checking Claude auth:', error);
+      }
+      
+      return res.status(401).json({ error: 'Claude authentication not found' });
+    }
+    
+    // Regular user authentication
     const user = userDb.getUserByUsername(username);
     if (!user) {
       return res.status(401).json({ error: 'Invalid username or password' });

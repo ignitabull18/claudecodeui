@@ -1,0 +1,78 @@
+name: Claude CLI Compliance Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  compliance-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
+        
+    - name: Install dependencies
+      run: bun install
+      
+    - name: Run ESLint
+      run: bun run lint:check
+      
+    - name: Run Claude CLI Compliance Audit
+      run: bun run audit:claude-compliance
+      
+    - name: Upload compliance report
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: compliance-violations
+        path: compliance-report.json
+        
+  security-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
+        
+    - name: Install dependencies
+      run: bun install
+      
+    - name: Audit for vulnerabilities
+      run: bun audit
+      
+    - name: Check for prohibited patterns
+      run: |
+        echo "🔍 Scanning for prohibited patterns..."
+        
+        # Check for mock data generators
+        if grep -r "generateMock\|mockData\|fakeData" server/routes/ --include="*.js"; then
+          echo "❌ Found prohibited mock data generators"
+          exit 1
+        fi
+        
+        # Check for custom implementations
+        if grep -r "fallback.*mode\|demo.*mode" server/routes/ --include="*.js"; then
+          echo "❌ Found prohibited fallback implementations"
+          exit 1
+        fi
+        
+        # Ensure Claude CLI usage in routes
+        if ! grep -r "claude\|execAsync" server/routes/ --include="*.js" > /dev/null; then
+          echo "❌ Routes must use Claude CLI"
+          exit 1
+        fi
+        
+        echo "✅ All security checks passed"

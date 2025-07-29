@@ -1,0 +1,136 @@
+# 🚫 CRITICAL: What NOT to Build
+
+## ❌ Forbidden Backend Implementation
+
+### DO NOT Create These Features
+```javascript
+// ❌ NEVER implement custom analysis engines
+import { parse } from '@babel/parser';
+import traverse from '@babel/traverse';
+import { ESLint } from 'eslint';
+import madge from 'madge';
+
+// ❌ NEVER build AST parsing logic
+function analyzeFile(filePath) {
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const ast = parse(content);
+  // This is Claude Code's job!
+}
+
+// ❌ NEVER create refactoring transformations  
+function performRefactoring(code, operation) {
+  // Let Claude Code handle this!
+}
+
+// ❌ NEVER implement dependency analysis
+function analyzeDependencies(projectPath) {
+  // Claude Code already does this!
+}
+```
+
+### DO NOT Add These Backend Routes
+```javascript
+// ❌ These should interface with Claude Code, not reimplement
+router.post('/analyze-ast', ...);           // NO custom AST analysis
+router.post('/dependency-graph', ...);     // NO custom dependency mapping  
+router.post('/refactor-code', ...);        // NO custom refactoring logic
+router.post('/generate-code', ...);        // NO custom code generation
+router.post('/detect-patterns', ...);      // NO custom pattern detection
+```
+
+## ✅ Correct Frontend Approach
+
+### DO Build UI Components That
+```javascript
+// ✅ Send requests to Claude Code via backend interface
+const analyzeProject = async () => {
+  const response = await fetch('/api/claude-code/analyze', {
+    method: 'POST',
+    body: JSON.stringify({ 
+      projectPath,
+      instruction: "Analyze this codebase for dependencies and patterns"
+    })
+  });
+  const claudeCodeResult = await response.json();
+  setAnalysisData(claudeCodeResult);
+};
+
+// ✅ Display Claude Code's results beautifully
+function DisplayAnalysis({ data }) {
+  return (
+    <div className="grid gap-4">
+      {data.patterns.map(pattern => (
+        <PatternCard key={pattern.id} pattern={pattern} />
+      ))}
+    </div>
+  );
+}
+
+// ✅ Provide UI for Claude Code interactions
+function RefactoringPanel() {
+  const [instruction, setInstruction] = useState('');
+  
+  const requestRefactoring = () => {
+    // Send natural language instruction to Claude Code
+    sendToClaudeCode(`Refactor this code: ${instruction}`);
+  };
+  
+  return (
+    <div>
+      <textarea 
+        value={instruction}
+        onChange={(e) => setInstruction(e.target.value)}
+        placeholder="Describe what you want to refactor..."
+      />
+      <Button onClick={requestRefactoring}>Send to Claude Code</Button>
+    </div>
+  );
+}
+```
+
+## 🎯 Remember: We Are a UI Wrapper
+
+### Our Role
+- **Visualize** Claude Code's capabilities
+- **Interface** with Claude Code CLI  
+- **Display** Claude Code's results beautifully
+- **Manage** user interactions with Claude Code
+- **Organize** Claude Code workflows
+
+### NOT Our Role  
+- **Analyze** code ourselves
+- **Refactor** code ourselves
+- **Generate** code ourselves  
+- **Parse** ASTs ourselves
+- **Detect** patterns ourselves
+
+## 🔄 Correct Integration Pattern
+
+```javascript
+// ✅ This is how we should work with Claude Code
+const ClaudeCodeInterface = {
+  async analyze(projectPath, instruction) {
+    // Send to backend that calls Claude Code CLI
+    return await fetch('/api/claude-code/command', {
+      method: 'POST',
+      body: JSON.stringify({
+        command: 'analyze',
+        args: { projectPath, instruction }
+      })
+    });
+  },
+  
+  async refactor(files, instruction) {
+    // Send to backend that calls Claude Code CLI
+    return await fetch('/api/claude-code/command', {
+      method: 'POST', 
+      body: JSON.stringify({
+        command: 'refactor',
+        args: { files, instruction }
+      })
+    });
+  }
+};
+```
+
+**Remember: Claude Code is the brain, we are the beautiful face! 🧠✨**

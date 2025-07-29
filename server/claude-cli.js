@@ -5,9 +5,35 @@ import os from 'os';
 
 let activeClaudeProcesses = new Map(); // Track active processes by session ID
 
+// Get effective model configuration from options or use defaults
+function getModelConfiguration(modelConfig) {
+  const defaultConfig = {
+    model: 'sonnet',
+    temperature: 0.7,
+    maxTokens: 4096,
+    topP: 1.0,
+    presencePenalty: 0.0,
+    frequencyPenalty: 0.0
+  };
+
+  // If model configuration is provided from frontend, use it
+  if (modelConfig && typeof modelConfig === 'object') {
+    return {
+      model: modelConfig.model || defaultConfig.model,
+      temperature: modelConfig.temperature !== undefined ? modelConfig.temperature : defaultConfig.temperature,
+      maxTokens: modelConfig.maxTokens || defaultConfig.maxTokens,
+      topP: modelConfig.topP !== undefined ? modelConfig.topP : defaultConfig.topP,
+      presencePenalty: modelConfig.presencePenalty !== undefined ? modelConfig.presencePenalty : defaultConfig.presencePenalty,
+      frequencyPenalty: modelConfig.frequencyPenalty !== undefined ? modelConfig.frequencyPenalty : defaultConfig.frequencyPenalty
+    };
+  }
+
+  return defaultConfig;
+}
+
 async function spawnClaude(command, options = {}, ws) {
   return new Promise(async (resolve, reject) => {
-    const { sessionId, projectPath, cwd, resume, toolsSettings, permissionMode, images } = options;
+    const { sessionId, projectPath, cwd, resume, toolsSettings, modelConfig, permissionMode, images } = options;
     let capturedSessionId = sessionId; // Track session ID throughout the process
     let sessionCreatedSent = false; // Track if we've already sent session-created event
     
@@ -164,7 +190,23 @@ async function spawnClaude(command, options = {}, ws) {
     
     // Add model for new sessions
     if (!resume) {
-      args.push('--model', 'sonnet');
+      const effectiveModelConfig = getModelConfiguration(modelConfig);
+      args.push('--model', modelConfig.model);
+      
+      // Add model parameters if configured
+      if (modelConfig.temperature !== undefined && modelConfig.temperature !== 0.7) {
+        args.push('--temperature', modelConfig.temperature.toString());
+      }
+      
+      if (modelConfig.maxTokens !== undefined && modelConfig.maxTokens !== 4096) {
+        args.push('--max-tokens', modelConfig.maxTokens.toString());
+      }
+      
+      if (modelConfig.topP !== undefined && modelConfig.topP !== 1.0) {
+        args.push('--top-p', modelConfig.topP.toString());
+      }
+      
+      console.log(`🧠 Using model: ${modelConfig.model}${modelConfig.temperature !== 0.7 ? ` (temp: ${modelConfig.temperature})` : ''}`);
     }
     
     // Add permission mode if specified (works for both new and resumed sessions)

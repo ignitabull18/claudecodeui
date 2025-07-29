@@ -1,27 +1,41 @@
-import Database from 'better-sqlite3';
+import { Database } from 'bun:sqlite';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+// REMOVED: intelligence-service.js - using Claude CLI only
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const DB_PATH = path.join(__dirname, 'auth.db');
+const INTELLIGENCE_DB_PATH = path.join(__dirname, 'intelligence.db');
 const INIT_SQL_PATH = path.join(__dirname, 'init.sql');
 
-// Create database connection
+// Create database connections
 const db = new Database(DB_PATH);
-console.log('Connected to SQLite database');
+console.log('🔗 Connected to authentication database');
 
 // Initialize database with schema
 const initializeDatabase = async () => {
   try {
+    // Initialize auth database
     const initSQL = fs.readFileSync(INIT_SQL_PATH, 'utf8');
     db.exec(initSQL);
-    console.log('Database initialized successfully');
+    console.log('✅ Authentication database initialized successfully');
+
+    // Initialize intelligence database
+    const intelligenceDb = new Database(INTELLIGENCE_DB_PATH);
+    intelligenceDb.run('PRAGMA journal_mode = WAL');
+    intelligenceDb.run('PRAGMA foreign_keys = ON');
+    intelligenceDb.exec(initSQL); // This includes both auth and intelligence schema
+    intelligenceDb.close();
+    
+    // REMOVED: Custom intelligence service - using Claude CLI only
+    console.log('✅ Database initialized successfully');
+    
   } catch (error) {
-    console.error('Error initializing database:', error.message);
+    console.error('❌ Error initializing databases:', error.message);
     throw error;
   }
 };
@@ -83,4 +97,5 @@ export {
   db,
   initializeDatabase,
   userDb
+  // REMOVED: intelligenceService - using Claude CLI only
 };

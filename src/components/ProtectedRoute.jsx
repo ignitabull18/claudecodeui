@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import SetupForm from './SetupForm';
-import LoginForm from './LoginForm';
+import LoginPage from './LoginPage';
 import { MessageSquare } from 'lucide-react';
 
 const LoadingScreen = () => (
@@ -35,7 +35,7 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!user) {
-    return <LoginForm />;
+    return <LoginPage />;
   }
 
   return children;

@@ -369,9 +369,8 @@ router.post('/generate-commit-message', async (req, res) => {
       }
     }
     
-    // Use AI to generate commit message (simple implementation)
-    // In a real implementation, you might want to use GPT or Claude API
-    const message = generateSimpleCommitMessage(files, combinedDiff);
+    // Use Claude CLI to generate commit message
+    const message = await generateCommitMessageWithClaude(files, combinedDiff, projectPath);
     
     res.json({ message });
   } catch (error) {
@@ -380,43 +379,43 @@ router.post('/generate-commit-message', async (req, res) => {
   }
 });
 
-// Simple commit message generator (can be replaced with AI)
-function generateSimpleCommitMessage(files, diff) {
-  const fileCount = files.length;
-  const isMultipleFiles = fileCount > 1;
-  
-  // Analyze the diff to determine the type of change
-  const additions = (diff.match(/^\+[^+]/gm) || []).length;
-  const deletions = (diff.match(/^-[^-]/gm) || []).length;
-  
-  // Determine the primary action
-  let action = 'Update';
-  if (additions > 0 && deletions === 0) {
-    action = 'Add';
-  } else if (deletions > 0 && additions === 0) {
-    action = 'Remove';
-  } else if (additions > deletions * 2) {
-    action = 'Enhance';
-  } else if (deletions > additions * 2) {
-    action = 'Refactor';
-  }
-  
-  // Generate message based on files
-  if (isMultipleFiles) {
-    const components = new Set(files.map(f => {
-      const parts = f.split('/');
-      return parts[parts.length - 2] || parts[0];
-    }));
-    
-    if (components.size === 1) {
-      return `${action} ${[...components][0]} component`;
-    } else {
-      return `${action} multiple components`;
+// Generate commit message using Claude CLI
+async function generateCommitMessageWithClaude(files, diff, projectPath) {
+  try {
+    const fileList = files.join(', ');
+    const prompt = `Please generate a concise, conventional commit message for these changes:
+
+Files changed: ${fileList}
+
+Git diff:
+${diff}
+
+Generate a commit message that:
+- Follows conventional commit format (type: description)
+- Is concise but descriptive
+- Reflects the actual changes made
+- Uses imperative mood (e.g., "Add", "Fix", "Update")
+
+Return only the commit message, no additional text.`;
+
+    const { stdout, stderr } = await execAsync(`claude --print "${prompt}"`, {
+      cwd: projectPath,
+      timeout: 30000
+    });
+
+    if (stderr && !stderr.includes('Warning')) {
+      throw new Error(stderr);
     }
-  } else {
-    const fileName = files[0].split('/').pop();
-    const componentName = fileName.replace(/\.(jsx?|tsx?|css|scss)$/, '');
-    return `${action} ${componentName}`;
+
+    // Clean up the response to get just the commit message
+    const message = stdout.trim().replace(/^["']|["']$/g, '');
+    return message || `Update ${files.length} file${files.length > 1 ? 's' : ''}`;
+
+  } catch (error) {
+    console.error('Error generating commit message with Claude CLI:', error);
+    // Simple fallback if Claude CLI fails
+    const fileNames = files.map(f => f.split('/').pop()).join(', ');
+    return `Update ${fileNames}`;
   }
 }
 

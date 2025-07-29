@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ScrollArea } from './ui/scroll-area';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 
-import { FolderOpen, Folder, Plus, MessageSquare, Clock, ChevronDown, ChevronRight, Edit3, Check, X, Trash2, Settings, FolderPlus, RefreshCw, Sparkles, Edit2, Star, Search } from 'lucide-react';
+import { FolderOpen, Folder, Plus, MessageSquare, Clock, ChevronDown, ChevronRight, Edit3, Check, X, Trash2, Settings, FolderPlus, RefreshCw, Sparkles, Edit2, Star, Search, Building, Brain } from 'lucide-react';
 import { cn } from '../lib/utils';
 import ClaudeLogo from './ClaudeLogo';
 import { api } from '../utils/api';
+import ProjectContextManager from './ProjectContextManager';
+import AdvancedSessionManager from './AdvancedSessionManager';
 
 // Move formatTimeAgo outside component to avoid recreation on every render
 const formatTimeAgo = (dateString, currentTime) => {
@@ -47,11 +50,13 @@ function Sidebar({
   isLoading,
   onRefresh,
   onShowSettings,
+  onShowMemoryManager,
   updateAvailable,
   latestVersion,
   currentVersion,
   onShowVersionModal
 }) {
+  const navigate = useNavigate();
   const [expandedProjects, setExpandedProjects] = useState(new Set());
   const [editingProject, setEditingProject] = useState(null);
   const [showNewProject, setShowNewProject] = useState(false);
@@ -68,6 +73,10 @@ function Sidebar({
   const [editingSessionName, setEditingSessionName] = useState('');
   const [generatingSummary, setGeneratingSummary] = useState({});
   const [searchFilter, setSearchFilter] = useState('');
+  const [showProjectContext, setShowProjectContext] = useState(false);
+  const [contextProject, setContextProject] = useState(null);
+  const [showAdvancedSession, setShowAdvancedSession] = useState(false);
+  const [advancedSessionProject, setAdvancedSessionProject] = useState(null);
 
   
   // Starred projects state - persisted in localStorage
@@ -774,6 +783,36 @@ function Sidebar({
                                       : "text-gray-600 dark:text-gray-400"
                                   )} />
                                 </button>
+                                <button
+                                  className="w-8 h-8 rounded-lg bg-green-500/10 dark:bg-green-900/30 flex items-center justify-center active:scale-90 border border-green-200 dark:border-green-800"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setContextProject(project);
+                                    setShowProjectContext(true);
+                                  }}
+                                  onTouchEnd={handleTouchClick(() => {
+                                    setContextProject(project);
+                                    setShowProjectContext(true);
+                                  })}
+                                  title="Project context settings"
+                                >
+                                  <Building className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                </button>
+                                <button
+                                  className="w-8 h-8 rounded-lg bg-purple-500/10 dark:bg-purple-900/30 flex items-center justify-center active:scale-90 border border-purple-200 dark:border-purple-800"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setAdvancedSessionProject(project);
+                                    setShowAdvancedSession(true);
+                                  }}
+                                  onTouchEnd={handleTouchClick(() => {
+                                    setAdvancedSessionProject(project);
+                                    setShowAdvancedSession(true);
+                                  })}
+                                  title="Advanced session management"
+                                >
+                                  <MessageSquare className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                </button>
                                 {getAllSessions(project).length === 0 && (
                                   <button
                                     className="w-8 h-8 rounded-lg bg-red-500/10 dark:bg-red-900/30 flex items-center justify-center active:scale-90 border border-red-200 dark:border-red-800"
@@ -923,6 +962,28 @@ function Sidebar({
                                   ? "text-yellow-600 dark:text-yellow-400 fill-current" 
                                   : "text-muted-foreground"
                               )} />
+                            </div>
+                            <div
+                              className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-green-50 dark:hover:bg-green-900/20 flex items-center justify-center rounded cursor-pointer touch:opacity-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setContextProject(project);
+                                setShowProjectContext(true);
+                              }}
+                              title="Project context settings"
+                            >
+                              <Building className="w-3 h-3 text-green-600 dark:text-green-400" />
+                            </div>
+                            <div
+                              className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center justify-center rounded cursor-pointer touch:opacity-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setAdvancedSessionProject(project);
+                                setShowAdvancedSession(true);
+                              }}
+                              title="Advanced session management"
+                            >
+                              <MessageSquare className="w-3 h-3 text-purple-600 dark:text-purple-400" />
                             </div>
                             <div
                               className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-accent flex items-center justify-center rounded cursor-pointer touch:opacity-100"
@@ -1279,25 +1340,79 @@ function Sidebar({
         <div className="md:hidden p-4 pb-20 border-t border-border/50">
           <button
             className="w-full h-14 bg-muted/50 hover:bg-muted/70 rounded-2xl flex items-center justify-start gap-4 px-4 active:scale-[0.98] transition-all duration-150"
-            onClick={onShowSettings}
+            onClick={() => navigate('/settings')}
           >
             <div className="w-10 h-10 rounded-2xl bg-background/80 flex items-center justify-center">
               <Settings className="w-5 h-5 text-muted-foreground" />
             </div>
             <span className="text-lg font-medium text-foreground">Settings</span>
           </button>
+          <button
+            className="w-full h-14 bg-muted/50 hover:bg-muted/70 rounded-2xl flex items-center justify-start gap-4 px-4 active:scale-[0.98] transition-all duration-150 mt-2"
+            onClick={onShowMemoryManager}
+          >
+            <div className="w-10 h-10 rounded-2xl bg-background/80 flex items-center justify-center">
+              <Brain className="w-5 h-5 text-muted-foreground" />
+            </div>
+            <span className="text-lg font-medium text-foreground">Memory</span>
+          </button>
         </div>
         
         {/* Desktop Settings */}
         <Button
           variant="ghost"
-          className="hidden md:flex w-full justify-start gap-2 p-2 h-auto font-normal text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-200"
-          onClick={onShowSettings}
+          className="hidden md:flex w-full justify-start gap-2 p-3 h-auto font-medium text-foreground hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-200 border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+          onClick={() => navigate('/settings')}
         >
-          <Settings className="w-3 h-3" />
-          <span className="text-xs">Tools Settings</span>
+          <Settings className="w-4 h-4" />
+          <span className="text-sm">Settings</span>
+        </Button>
+        
+        {/* Desktop Memory */}
+        <Button
+          variant="ghost"
+          className="hidden md:flex w-full justify-start gap-2 p-2 h-auto font-normal text-muted-foreground hover:text-foreground hover:bg-accent transition-colors duration-200"
+          onClick={onShowMemoryManager}
+        >
+          <Brain className="w-3 h-3" />
+          <span className="text-xs">Memory Manager</span>
         </Button>
       </div>
+      
+      {/* Project Context Manager Modal */}
+      <ProjectContextManager
+        isOpen={showProjectContext}
+        onClose={() => {
+          setShowProjectContext(false);
+          setContextProject(null);
+        }}
+        selectedProject={contextProject}
+      />
+
+      {/* Advanced Session Manager Modal */}
+      <AdvancedSessionManager
+        isOpen={showAdvancedSession}
+        onClose={() => {
+          setShowAdvancedSession(false);
+          setAdvancedSessionProject(null);
+        }}
+        selectedProject={advancedSessionProject}
+        sessions={advancedSessionProject ? getAllSessions(advancedSessionProject) : []}
+        onSessionSelect={(sessionId) => {
+          // Navigate to session
+          if (onSessionSelect) {
+            onSessionSelect(sessionId);
+          }
+          setShowAdvancedSession(false);
+          setAdvancedSessionProject(null);
+        }}
+        onSessionCreate={(sessionData) => {
+          // Handle session creation from template
+          console.log('Creating session from template:', sessionData);
+          setShowAdvancedSession(false);
+          setAdvancedSessionProject(null);
+        }}
+      />
     </div>
   );
 }

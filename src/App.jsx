@@ -24,6 +24,8 @@ import Sidebar from './components/Sidebar';
 import MainContent from './components/MainContent';
 import MobileNav from './components/MobileNav';
 import ToolsSettings from './components/ToolsSettings';
+import SettingsPage from './components/SettingsPage';
+import MemoryManager from './components/MemoryManager';
 import QuickSettingsPanel from './components/QuickSettingsPanel';
 
 import { useWebSocket } from './utils/websocket';
@@ -32,6 +34,10 @@ import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useVersionCheck } from './hooks/useVersionCheck';
 import { api } from './utils/api';
+
+// Stagewise toolbar integration
+import { StagewiseToolbar } from '@stagewise/toolbar-react';
+import ReactPlugin from '@stagewise-plugins/react';
 
 
 // Main App component with routing
@@ -51,6 +57,8 @@ function AppContent() {
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [showToolsSettings, setShowToolsSettings] = useState(false);
+
+  const [showMemoryManager, setShowMemoryManager] = useState(false);
   const [showQuickSettings, setShowQuickSettings] = useState(false);
   const [autoExpandTools, setAutoExpandTools] = useState(() => {
     const saved = localStorage.getItem('autoExpandTools');
@@ -253,6 +261,30 @@ function AppContent() {
       // Don't redirect to home, let the session load naturally
     }
   }, [sessionId, projects, navigate]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Ctrl/Cmd + , = Open settings page  
+      if ((event.ctrlKey || event.metaKey) && event.key === ',' && !event.shiftKey) {
+        event.preventDefault();
+        navigate('/settings');
+      }
+      // Ctrl/Cmd + Shift + , = Open tools settings
+      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === ',') {
+        event.preventDefault(); 
+        setShowToolsSettings(true);
+      }
+      // Ctrl/Cmd + M = Open memory manager
+      if ((event.ctrlKey || event.metaKey) && event.key === 'm' && !event.shiftKey) {
+        event.preventDefault();
+        setShowMemoryManager(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
 
   const handleProjectSelect = (project) => {
     setSelectedProject(project);
@@ -513,7 +545,7 @@ function AppContent() {
               onProjectDelete={handleProjectDelete}
               isLoading={isLoadingProjects}
               onRefresh={handleSidebarRefresh}
-              onShowSettings={() => setShowToolsSettings(true)}
+              onShowMemoryManager={() => setShowMemoryManager(true)}
               updateAvailable={updateAvailable}
               latestVersion={latestVersion}
               currentVersion={currentVersion}
@@ -558,7 +590,7 @@ function AppContent() {
               onProjectDelete={handleProjectDelete}
               isLoading={isLoadingProjects}
               onRefresh={handleSidebarRefresh}
-              onShowSettings={() => setShowToolsSettings(true)}
+              onShowMemoryManager={() => setShowMemoryManager(true)}
               updateAvailable={updateAvailable}
               latestVersion={latestVersion}
               currentVersion={currentVersion}
@@ -586,7 +618,6 @@ function AppContent() {
           onSessionInactive={markSessionAsInactive}
           onReplaceTemporarySession={replaceTemporarySession}
           onNavigateToSession={(sessionId) => navigate(`/session/${sessionId}`)}
-          onShowSettings={() => setShowToolsSettings(true)}
           autoExpandTools={autoExpandTools}
           showRawParameters={showRawParameters}
           autoScrollToBottom={autoScrollToBottom}
@@ -635,6 +666,20 @@ function AppContent() {
       <ToolsSettings
         isOpen={showToolsSettings}
         onClose={() => setShowToolsSettings(false)}
+        onOpenAdvanced={() => {
+          setShowToolsSettings(false);
+          setShowAdvancedSettings(true);
+        }}
+      />
+
+
+
+      {/* Memory Manager Modal */}
+      <MemoryManager
+        isOpen={showMemoryManager}
+        onClose={() => setShowMemoryManager(false)}
+        selectedProject={selectedProject}
+        currentSession={selectedSession}
       />
 
       {/* Version Upgrade Modal */}
@@ -653,8 +698,15 @@ function App() {
             <Routes>
               <Route path="/" element={<AppContent />} />
               <Route path="/session/:sessionId" element={<AppContent />} />
+              <Route path="/settings" element={<SettingsPage />} />
             </Routes>
           </Router>
+          {/* Stagewise toolbar - only renders in development mode */}
+          <StagewiseToolbar 
+            config={{
+              plugins: [ReactPlugin]
+            }}
+          />
         </ProtectedRoute>
       </AuthProvider>
     </ThemeProvider>

@@ -46,7 +46,7 @@ const DOCUMENTATION_SOURCES = {
 function WebSearchBrowser({ isOpen, onClose, selectedProject, initialQuery = '' }) {
   // State management
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [searchType, setSearchType] = useState('web');
+  const [searchType, setSearchType] = useState('WEB');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchHistory, setSearchHistory] = useState([]);
@@ -139,7 +139,7 @@ function WebSearchBrowser({ isOpen, onClose, selectedProject, initialQuery = '' 
         },
         body: JSON.stringify({
           query: searchQuery,
-          type: searchType,
+          type: searchType.toLowerCase(),
           filters,
           projectContext: selectedProject ? {
             name: selectedProject.name,
@@ -155,7 +155,7 @@ function WebSearchBrowser({ isOpen, onClose, selectedProject, initialQuery = '' 
         // Add to history
         addToHistory({
           query: searchQuery,
-          type: searchType,
+          type: searchType.toLowerCase(),
           timestamp: new Date().toISOString(),
           resultCount: data.results.length
         });
@@ -211,7 +211,7 @@ function WebSearchBrowser({ isOpen, onClose, selectedProject, initialQuery = '' 
             title: result.title,
             url: result.url,
             snippet: result.snippet,
-            type: searchType
+            type: searchType.toLowerCase()
           })
         });
       }
@@ -372,12 +372,12 @@ function WebSearchBrowser({ isOpen, onClose, selectedProject, initialQuery = '' 
         {/* Search Type Tabs */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2">
-            {Object.values(SEARCH_TYPES).map((type) => (
+            {Object.entries(SEARCH_TYPES).map(([typeKey, type]) => (
               <button
                 key={type.id}
-                onClick={() => setSearchType(type.id)}
+                onClick={() => setSearchType(typeKey)}
                 className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-                  searchType === type.id
+                  searchType === typeKey
                     ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                     : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
                 }`}
@@ -515,7 +515,7 @@ function WebSearchBrowser({ isOpen, onClose, selectedProject, initialQuery = '' 
                     className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 cursor-pointer"
                     onClick={() => {
                       setSearchQuery(item.query);
-                      setSearchType(item.type);
+                      setSearchType(item.type.toUpperCase());
                       setActiveTab('search');
                       performSearch();
                     }}
@@ -525,7 +525,7 @@ function WebSearchBrowser({ isOpen, onClose, selectedProject, initialQuery = '' 
                         <Search className="w-4 h-4 text-gray-400" />
                         <span className="font-medium">{item.query}</span>
                         <Badge variant="outline" className="text-xs">
-                          {SEARCH_TYPES[item.type]?.label}
+                          {SEARCH_TYPES[item.type.toUpperCase()]?.label || item.type}
                         </Badge>
                       </div>
                       <span className="text-xs text-gray-500">
@@ -599,7 +599,7 @@ function WebSearchBrowser({ isOpen, onClose, selectedProject, initialQuery = '' 
         </ScrollArea>
 
         {/* Documentation Sources (Bottom Bar) */}
-        {searchType === 'docs' && (
+        {searchType === 'DOCS' && (
           <div className="p-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-500 dark:text-gray-400">Quick Access:</span>

@@ -2044,7 +2044,61 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
       };
     };
 
+    // Get model configuration from localStorage
+    const getModelConfiguration = () => {
+      try {
+        // Check for project-specific settings first
+        const projectPath = selectedProject?.path;
+        if (projectPath) {
+          const projectSettings = safeLocalStorage.getItem(`claude-model-settings-${btoa(projectPath)}`);
+          if (projectSettings) {
+            const parsedProjectSettings = JSON.parse(projectSettings);
+            if (parsedProjectSettings.enabled) {
+              return {
+                model: parsedProjectSettings.model || 'sonnet',
+                temperature: parsedProjectSettings.temperature || 0.7,
+                maxTokens: parsedProjectSettings.maxTokens || 4096,
+                topP: parsedProjectSettings.topP || 1.0,
+                presencePenalty: parsedProjectSettings.presencePenalty || 0.0,
+                frequencyPenalty: parsedProjectSettings.frequencyPenalty || 0.0,
+                source: 'project'
+              };
+            }
+          }
+        }
+
+        // Fall back to global settings
+        const globalSettings = safeLocalStorage.getItem('claude-model-settings-global');
+        if (globalSettings) {
+          const parsedGlobalSettings = JSON.parse(globalSettings);
+          return {
+            model: parsedGlobalSettings.defaultModel || 'sonnet',
+            temperature: parsedGlobalSettings.temperature || 0.7,
+            maxTokens: parsedGlobalSettings.maxTokens || 4096,
+            topP: parsedGlobalSettings.topP || 1.0,
+            presencePenalty: parsedGlobalSettings.presencePenalty || 0.0,
+            frequencyPenalty: parsedGlobalSettings.frequencyPenalty || 0.0,
+            source: 'global'
+          };
+        }
+      } catch (error) {
+        console.error('Error loading model configuration:', error);
+      }
+      
+      // Default configuration
+      return {
+        model: 'sonnet',
+        temperature: 0.7,
+        maxTokens: 4096,
+        topP: 1.0,
+        presencePenalty: 0.0,
+        frequencyPenalty: 0.0,
+        source: 'default'
+      };
+    };
+
     const toolsSettings = getToolsSettings();
+    const modelConfig = getModelConfiguration();
 
     // Send command to Claude CLI via WebSocket with images
     sendMessage({
@@ -2056,6 +2110,7 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
         sessionId: currentSessionId,
         resume: !!currentSessionId,
         toolsSettings: toolsSettings,
+        modelConfig: modelConfig,
         permissionMode: permissionMode,
         images: uploadedImages // Pass images to backend
       }

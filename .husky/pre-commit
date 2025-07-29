@@ -1,0 +1,18 @@
+echo "🔍 Running Claude CLI compliance checks..."
+
+# Run lint check
+bun run lint:check
+if [ $? -ne 0 ]; then
+  echo "❌ Linting failed. Please fix linting errors before committing."
+  exit 1
+fi
+
+# Run Claude CLI compliance audit
+bun run audit:claude-compliance
+if [ $? -ne 0 ]; then
+  echo "❌ Claude CLI compliance violations found. Please fix before committing."
+  echo "💡 Tip: Run 'bun run audit:claude-compliance' to see detailed violations."
+  exit 1
+fi
+
+echo "✅ All checks passed! Proceeding with commit."

@@ -3,10 +3,12 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
 import { Badge } from './ui/badge';
-import { X, Plus, Settings, Shield, AlertTriangle, Moon, Sun, Server, Edit3, Trash2, Play, Globe, Terminal, Zap } from 'lucide-react';
+import { X, Plus, Settings, Shield, AlertTriangle, Moon, Sun, Server, Edit3, Trash2, Play, Globe, Terminal, Zap, Brain, Wrench } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import ModelSettings from './ModelSettings';
+import AdvancedToolManager from './AdvancedToolManager';
 
-function ToolsSettings({ isOpen, onClose }) {
+function ToolsSettings({ isOpen, onClose, onOpenAdvanced }) {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const [allowedTools, setAllowedTools] = useState([]);
   const [disallowedTools, setDisallowedTools] = useState([]);
@@ -42,6 +44,8 @@ function ToolsSettings({ isOpen, onClose }) {
   const [mcpServerTools, setMcpServerTools] = useState({});
   const [mcpToolsLoading, setMcpToolsLoading] = useState({});
   const [activeTab, setActiveTab] = useState('tools');
+  const [showModelSettings, setShowModelSettings] = useState(false);
+  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
 
   // Common tool patterns
   const commonTools = [
@@ -76,7 +80,7 @@ function ToolsSettings({ isOpen, onClose }) {
       
       if (cliResponse.ok) {
         const cliData = await cliResponse.json();
-        if (cliData.success && cliData.servers) {
+        if (cliData.success && cliData.servers && Array.isArray(cliData.servers)) {
           // Convert CLI format to our format
           const servers = cliData.servers.map(server => ({
             id: server.name,
@@ -109,12 +113,22 @@ function ToolsSettings({ isOpen, onClose }) {
       
       if (response.ok) {
         const data = await response.json();
-        setMcpServers(data.servers || []);
+        const servers = data.servers || [];
+        // Ensure servers is always an array
+        if (Array.isArray(servers)) {
+          setMcpServers(servers);
+        } else {
+          console.error('MCP servers data is not an array:', servers);
+          setMcpServers([]);
+        }
       } else {
         console.error('Failed to fetch MCP servers');
+        setMcpServers([]);
       }
     } catch (error) {
       console.error('Error fetching MCP servers:', error);
+      // Ensure mcpServers is always an array even when there's an error
+      setMcpServers([]);
     }
   };
 
@@ -503,7 +517,8 @@ function ToolsSettings({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-backdrop fixed inset-0 flex items-center justify-center z-[100] md:p-4 bg-background/95">
+    <>
+    <div className="modal-backdrop fixed inset-0 flex items-center justify-center z-[100] md:p-4 bg-background/95" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="bg-background border border-border md:rounded-lg shadow-xl w-full md:max-w-4xl h-full md:h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-border flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -512,14 +527,27 @@ function ToolsSettings({ isOpen, onClose }) {
               Settings
             </h2>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground touch-manipulation"
-          >
-            <X className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {onOpenAdvanced && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onOpenAdvanced}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Advanced
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="text-muted-foreground hover:text-foreground touch-manipulation"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto">
@@ -535,6 +563,28 @@ function ToolsSettings({ isOpen, onClose }) {
                 }`}
               >
                 Tools
+              </button>
+              <button
+                onClick={() => setActiveTab('models')}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'models'
+                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Brain className="w-4 h-4 mr-2 inline" />
+                Models
+              </button>
+              <button
+                onClick={() => setActiveTab('advanced')}
+                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'advanced'
+                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Wrench className="w-4 h-4 mr-2 inline" />
+                Advanced Tools
               </button>
               <button
                 onClick={() => setActiveTab('appearance')}
@@ -579,7 +629,7 @@ function ToolsSettings({ isOpen, onClose }) {
             <span
               className={`${
                 isDarkMode ? 'translate-x-7' : 'translate-x-1'
-              } inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform duration-200 flex items-center justify-center`}
+              } h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform duration-200 flex items-center justify-center`}
             >
               {isDarkMode ? (
                 <Moon className="w-3.5 h-3.5 text-gray-700" />
@@ -618,6 +668,52 @@ function ToolsSettings({ isOpen, onClose }) {
   </div>
 )}
 
+              </div>
+            )}
+
+            {/* Models Tab */}
+            {activeTab === 'models' && (
+              <div className="space-y-6 md:space-y-8">
+                <div className="text-center py-12">
+                  <Brain className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    Model Configuration
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+                    Configure which Claude model to use and adjust parameters like temperature, max tokens, and more. 
+                    Set global defaults or customize settings per project.
+                  </p>
+                  <Button
+                    onClick={() => setShowModelSettings(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Brain className="w-4 h-4 mr-2" />
+                    Configure Models
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Advanced Tools Tab */}
+            {activeTab === 'advanced' && (
+              <div className="space-y-6 md:space-y-8">
+                <div className="text-center py-12">
+                  <Wrench className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    Advanced Tool Management
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+                    Configure granular tool permissions, custom configurations, MCP server management,
+                    and view detailed usage analytics.
+                  </p>
+                  <Button
+                    onClick={() => setShowAdvancedTools(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Wrench className="w-4 h-4 mr-2" />
+                    Open Advanced Tools
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -835,7 +931,7 @@ function ToolsSettings({ isOpen, onClose }) {
 
               {/* MCP Servers List */}
               <div className="space-y-2">
-                {mcpServers.map(server => (
+                {(Array.isArray(mcpServers) ? mcpServers : []).map(server => (
                   <div key={server.id} className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -872,7 +968,7 @@ function ToolsSettings({ isOpen, onClose }) {
                             <div className="font-medium">{mcpTestResults[server.id].message}</div>
                             {mcpTestResults[server.id].details && mcpTestResults[server.id].details.length > 0 && (
                               <ul className="mt-1 space-y-0.5">
-                                {mcpTestResults[server.id].details.map((detail, i) => (
+                                {(mcpTestResults[server.id].details || []).map((detail, i) => (
                                   <li key={i}>• {detail}</li>
                                 ))}
                               </ul>
@@ -887,9 +983,9 @@ function ToolsSettings({ isOpen, onClose }) {
                             
                             {mcpServerTools[server.id].tools && mcpServerTools[server.id].tools.length > 0 && (
                               <div className="mb-2">
-                                <div className="font-medium text-xs mb-1">Tools ({mcpServerTools[server.id].tools.length}):</div>
+                                <div className="font-medium text-xs mb-1">Tools ({(mcpServerTools[server.id].tools || []).length}):</div>
                                 <ul className="space-y-0.5">
-                                  {mcpServerTools[server.id].tools.map((tool, i) => (
+                                  {(mcpServerTools[server.id].tools || []).map((tool, i) => (
                                     <li key={i} className="flex items-start gap-1">
                                       <span className="text-blue-400 mt-0.5">•</span>
                                       <div>
@@ -906,9 +1002,9 @@ function ToolsSettings({ isOpen, onClose }) {
 
                             {mcpServerTools[server.id].resources && mcpServerTools[server.id].resources.length > 0 && (
                               <div className="mb-2">
-                                <div className="font-medium text-xs mb-1">Resources ({mcpServerTools[server.id].resources.length}):</div>
+                                <div className="font-medium text-xs mb-1">Resources ({(mcpServerTools[server.id].resources || []).length}):</div>
                                 <ul className="space-y-0.5">
-                                  {mcpServerTools[server.id].resources.map((resource, i) => (
+                                  {(mcpServerTools[server.id].resources || []).map((resource, i) => (
                                     <li key={i} className="flex items-start gap-1">
                                       <span className="text-blue-400 mt-0.5">•</span>
                                       <div>
@@ -925,9 +1021,9 @@ function ToolsSettings({ isOpen, onClose }) {
 
                             {mcpServerTools[server.id].prompts && mcpServerTools[server.id].prompts.length > 0 && (
                               <div>
-                                <div className="font-medium text-xs mb-1">Prompts ({mcpServerTools[server.id].prompts.length}):</div>
+                                <div className="font-medium text-xs mb-1">Prompts ({(mcpServerTools[server.id].prompts || []).length}):</div>
                                 <ul className="space-y-0.5">
-                                  {mcpServerTools[server.id].prompts.map((prompt, i) => (
+                                  {(mcpServerTools[server.id].prompts || []).map((prompt, i) => (
                                     <li key={i} className="flex items-start gap-1">
                                       <span className="text-blue-400 mt-0.5">•</span>
                                       <div>
@@ -1000,7 +1096,7 @@ function ToolsSettings({ isOpen, onClose }) {
                     </div>
                   </div>
                 ))}
-                {mcpServers.length === 0 && (
+                {(Array.isArray(mcpServers) ? mcpServers : []).length === 0 && (
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     No MCP servers configured
                   </div>
@@ -1204,7 +1300,7 @@ function ToolsSettings({ isOpen, onClose }) {
                           </div>
                           {mcpConfigTestResult.details && mcpConfigTestResult.details.length > 0 && (
                             <ul className="mt-2 space-y-1 text-xs">
-                              {mcpConfigTestResult.details.map((detail, i) => (
+                              {(mcpConfigTestResult.details || []).map((detail, i) => (
                                 <li key={i} className="flex items-start gap-1">
                                   <span className="text-gray-400 mt-0.5">•</span>
                                   <span>{detail}</span>
@@ -1282,7 +1378,21 @@ function ToolsSettings({ isOpen, onClose }) {
           </div>
         </div>
       </div>
+      
     </div>
+    
+    {/* Model Settings Modal */}
+    <ModelSettings 
+      isOpen={showModelSettings} 
+      onClose={() => setShowModelSettings(false)} 
+    />
+    
+    {/* Advanced Tool Manager Modal */}
+    <AdvancedToolManager
+      isOpen={showAdvancedTools}
+      onClose={() => setShowAdvancedTools(false)}
+    />
+    </>
   );
 }
 

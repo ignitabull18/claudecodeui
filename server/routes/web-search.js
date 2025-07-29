@@ -1,7 +1,7 @@
 import express from 'express';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import db from '../database/db.js';
+import { db } from '../database/db.js';
 
 const router = express.Router();
 const execAsync = promisify(exec);
@@ -148,18 +148,36 @@ router.post('/search', async (req, res) => {
       });
       
     } catch (execError) {
-      console.error('Error executing Claude:', execError);
+      console.error('❌ Error executing Claude for search:', execError);
       
-      // Fallback: Return mock results for development
-      const mockResults = getMockResults(query, type);
+      // Handle search failure gracefully
+      try {
+        // Attempt direct web search using curl or other tools
+        const alternativeResults = await performAlternativeSearch(query, type);
+        
+        if (alternativeResults && alternativeResults.length > 0) {
+          res.json({
+            success: true,
+            results: alternativeResults,
+            query,
+            type,
+            timestamp: new Date().toISOString(),
+            method: 'alternative'
+          });
+          return;
+        }
+      } catch (altError) {
+        console.error('❌ Search methods failed:', altError);
+      }
       
-      res.json({
-        success: true,
-        results: mockResults,
+      // Return error instead of mock results
+      res.status(503).json({
+        success: false,
+        error: 'Search service temporarily unavailable',
+        message: 'Unable to perform web search at this time. Please try again later.',
         query,
         type,
-        timestamp: new Date().toISOString(),
-        mock: true
+        timestamp: new Date().toISOString()
       });
     }
     
@@ -171,6 +189,99 @@ router.post('/search', async (req, res) => {
     });
   }
 });
+
+    // Additional search methods when Claude CLI fails
+async function performAlternativeSearch(query, type) {
+  try {
+    console.log(`🔄 Trying additional search methods for: ${query}`);
+    
+    // Try using curl to query a public search API
+    const searchEngines = [
+      {
+        name: 'DuckDuckGo Instant Answer API',
+        url: `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`
+      }
+    ];
+    
+    for (const engine of searchEngines) {
+      try {
+        const { execAsync } = require('./utils');
+        const command = `curl -s "${engine.url}"`;
+        const { stdout } = await execAsync(command, { timeout: 10000 });
+        
+        if (stdout) {
+          const data = JSON.parse(stdout);
+          const results = parseSearchEngineResults(data, engine.name, query, type);
+          
+          if (results && results.length > 0) {
+            console.log(`✅ Successfully got results from ${engine.name}`);
+            return results;
+          }
+        }
+      } catch (engineError) {
+        console.warn(`⚠️ ${engine.name} search failed:`, engineError.message);
+        continue;
+      }
+    }
+    
+    return null;
+    
+  } catch (error) {
+          console.error('❌ All search methods failed:', error);
+    return null;
+  }
+}
+
+// Parse results from different search engines
+function parseSearchEngineResults(data, engineName, query, type) {
+  const results = [];
+  
+  try {
+    switch (engineName) {
+      case 'DuckDuckGo Instant Answer API':
+        // Parse DuckDuckGo API response
+        if (data.Abstract) {
+          results.push({
+            title: data.Heading || query,
+            url: data.AbstractURL || `https://duckduckgo.com/?q=${encodeURIComponent(query)}`,
+            snippet: data.Abstract,
+            source: data.AbstractSource || 'DuckDuckGo',
+            metadata: { 
+              date: new Date().toISOString(),
+              engine: 'DuckDuckGo'
+            }
+          });
+        }
+        
+        // Add related topics if available
+        if (data.RelatedTopics && Array.isArray(data.RelatedTopics)) {
+          data.RelatedTopics.slice(0, 3).forEach(topic => {
+            if (topic.Text && topic.FirstURL) {
+              results.push({
+                title: topic.Text.split(' - ')[0] || topic.Text.substring(0, 60),
+                url: topic.FirstURL,
+                snippet: topic.Text,
+                source: 'DuckDuckGo Related',
+                metadata: { 
+                  date: new Date().toISOString(),
+                  engine: 'DuckDuckGo'
+                }
+              });
+            }
+          });
+        }
+        break;
+        
+      default:
+        console.warn(`Unknown search engine: ${engineName}`);
+    }
+    
+  } catch (parseError) {
+    console.error(`❌ Error parsing ${engineName} results:`, parseError);
+  }
+  
+  return results;
+}
 
 // Get search history
 router.get('/history', async (req, res) => {
@@ -329,65 +440,5 @@ router.delete('/bookmarks/:url', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete bookmark' });
   }
 });
-
-// Mock results for development/fallback
-function getMockResults(query, type) {
-  const baseResults = [
-    {
-      title: `${query} - Official Documentation`,
-      url: `https://docs.example.com/${query.toLowerCase().replace(/\s+/g, '-')}`,
-      snippet: `Comprehensive documentation about ${query}. Learn how to implement and use ${query} in your projects with detailed examples and best practices.`,
-      source: 'Official Docs',
-      metadata: { date: new Date().toISOString(), language: 'en' }
-    },
-    {
-      title: `Getting Started with ${query}`,
-      url: `https://tutorial.example.com/${query.toLowerCase().replace(/\s+/g, '-')}`,
-      snippet: `A beginner-friendly guide to ${query}. This tutorial covers the basics and provides step-by-step instructions for common use cases.`,
-      source: 'Tutorial Site',
-      metadata: { readTime: '10 min', date: new Date().toISOString() }
-    },
-    {
-      title: `${query} on Stack Overflow`,
-      url: `https://stackoverflow.com/questions/tagged/${query.toLowerCase().replace(/\s+/g, '-')}`,
-      snippet: `Questions tagged with ${query}. Find solutions to common problems and learn from the community's collective knowledge.`,
-      source: 'Stack Overflow',
-      metadata: { date: new Date().toISOString() }
-    }
-  ];
-  
-  // Add type-specific results
-  switch (type) {
-    case 'code':
-      baseResults.push({
-        title: `${query} Code Examples - GitHub`,
-        url: `https://github.com/search?q=${encodeURIComponent(query)}`,
-        snippet: `Repository search results for ${query}. Find open-source implementations and code samples.`,
-        source: 'GitHub',
-        metadata: { language: 'Multiple' }
-      });
-      break;
-    case 'docs':
-      baseResults.push({
-        title: `${query} API Reference`,
-        url: `https://api.example.com/${query.toLowerCase()}`,
-        snippet: `Complete API reference for ${query}. Detailed documentation of all methods, parameters, and return values.`,
-        source: 'API Docs',
-        metadata: { date: new Date().toISOString() }
-      });
-      break;
-    case 'tutorials':
-      baseResults.push({
-        title: `Video Tutorial: ${query} in 30 Minutes`,
-        url: `https://video.example.com/watch/${query.toLowerCase()}`,
-        snippet: `Learn ${query} through this comprehensive video tutorial. Perfect for visual learners who prefer hands-on demonstrations.`,
-        source: 'Video Platform',
-        metadata: { readTime: '30 min video' }
-      });
-      break;
-  }
-  
-  return baseResults;
-}
 
 export default router; 

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollArea } from './ui/scroll-area';
 import { Button } from './ui/button';
-import { Folder, FolderOpen, File, FileText, FileCode, List, TableProperties, Eye } from 'lucide-react';
+import { Folder, FolderOpen, File, FileText, FileCode, List, TableProperties, Eye, Settings } from 'lucide-react';
 import { cn } from '../lib/utils';
 import CodeEditor from './CodeEditor';
 import ImageViewer from './ImageViewer';
+import AdvancedFileOperations from './AdvancedFileOperations';
 import { api } from '../utils/api';
 
 function FileTree({ selectedProject }) {
@@ -14,6 +15,7 @@ function FileTree({ selectedProject }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [viewMode, setViewMode] = useState('detailed'); // 'simple', 'detailed', 'compact'
+  const [showAdvancedOps, setShowAdvancedOps] = useState(false);
 
   useEffect(() => {
     if (selectedProject) {
@@ -311,7 +313,18 @@ function FileTree({ selectedProject }) {
       {/* View Mode Toggle */}
       <div className="p-4 border-b border-border flex items-center justify-between">
         <h3 className="text-sm font-medium text-foreground">Files</h3>
-        <div className="flex gap-1">
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 px-2"
+            onClick={() => setShowAdvancedOps(true)}
+            title="Advanced file operations"
+          >
+            <Settings className="w-3 h-3 mr-1" />
+            <span className="text-xs">Ops</span>
+          </Button>
+          <div className="flex gap-1">
           <Button
             variant={viewMode === 'simple' ? 'default' : 'ghost'}
             size="sm"
@@ -339,6 +352,7 @@ function FileTree({ selectedProject }) {
           >
             <TableProperties className="w-4 h-4" />
           </Button>
+          </div>
         </div>
       </div>
 
@@ -388,6 +402,16 @@ function FileTree({ selectedProject }) {
         <ImageViewer
           file={selectedImage}
           onClose={() => setSelectedImage(null)}
+        />
+      )}
+
+      {/* Advanced File Operations Modal */}
+      {showAdvancedOps && (
+        <AdvancedFileOperations
+          isOpen={showAdvancedOps}
+          onClose={() => setShowAdvancedOps(false)}
+          selectedProject={selectedProject}
+          initialFiles={files}
         />
       )}
     </div>
